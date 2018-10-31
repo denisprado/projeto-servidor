@@ -42,3 +42,5 @@ com os seguintes componentes:
 O usuário grader pode realizar acesso por ssh pela por 2200 (a porta SSH 22 padrão foi fechada e a solicitação de password desabilitada), informando a seguinte chave privada:
 
 [grader_key.pem](grader_key)
+
+passphrase: clipper02
