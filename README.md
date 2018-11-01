@@ -1,9 +1,9 @@
 # Projeto Configuração de Servidor Linux
 
 ## O endereço de IP e a porta SSH.
-O IP da instância Lightsail criada é 18.215.249.3, mas considerando que o acesso pelo Google Sign In não pode ser feito diretamente somente por IPs, fiz uso do serviço http://xip.io, que geral wildcards DNS para qualquer IP. Portanto o site deve ser acessado pelo endereço:
+O IP da instância Lightsail criada é http://35.175.206.63, mas considerando que o acesso pelo Google Sign In não pode ser feito diretamente somente por IPs, fiz uso do serviço http://xip.io, que geral wildcards DNS para qualquer IP. Portanto o site deve ser acessado pelo endereço:
 
-    http://18.215.249.3.xip.io/
+    http://35.175.206.63.xip.io/
 
 ## Softwares e configurações.
 - [Ubuntu Linux Server](https://www.ubuntu.com/)
@@ -28,7 +28,7 @@ com os seguintes componentes:
     - httplib2
     - requests
     - oauth2client
-    - psycopg2
+    - python-psycopg2
     - libpq-dev
 
 ## Recursos de terceiros
