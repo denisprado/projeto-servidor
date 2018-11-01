@@ -1,0 +1,200 @@
+Linux-Server-Configuration-Udacity-Full-Stack-Nanodegree-Project
+
+Public IP address: 35.175.206.63
+SSH port: 2200
+
+LightsailDefaultPrivateKey-us-east-2.pem
+Create a new file named lightsail2.rsa under ~/.ssh folder on your local machine
+Copy and paste content from downloaded private key file to lightsail2.rsa
+
+chmod 600 ~/.ssh/lightsail2.pem
+ssh -i ~/.ssh/lightsail2.pem ubuntu@35.175.206.63
+
+
+sudo apt-get update 
+sudo apt-get upgrade 
+sudo apt-get dist-upgrade
+
+------ snap1
+
+sudo nano /etc/ssh/sshd_config
+Change the port number from 22 to 2200 in this file
+sudo service ssh restart
+sudo ufw status
+sudo ufw default deny incoming
+sudo ufw default allow outgoing
+sudo ufw allow 2200/tcp
+sudo ufw allow www
+sudo ufw allow 123/udp
+sudo ufw deny 22
+
+sudo ufw enable
+sudo ufw status
+Update the firewall configuration on Amazon Lightsail website under Networking. Delete default SSH port 22 and add port 80, 123, 2200
+
+------ snap2
+
+Open up a new terminal: ssh -i ~/.ssh/lightsail2.pem ubuntu@35.175.206.63 -p 2200
+
+sudo adduser grader
+sudo nano /etc/sudoers
+sudo touch /etc/sudoers.d/grader
+sudo nano /etc/sudoers.d/grader, add code "grader ALL=(ALL:ALL) ALL"
+
+
+Create an SSH key pair for grader using the ssh-keygen tool on your local machine. Save it in ~/.ssh path
+
+On your local machine, read the generated public key cat ~/.ssh/FILE-NAME.pub
+
+sudo su - grader
+
+mkdir .ssh
+sudo touch .ssh/authorized_keys
+sudo nano .ssh/authorized_keys
+Copy the public key to this authorized_keys file on the virtual machine and save
+chmod 700 .ssh
+sudo chmod 644 .ssh/authorized_keys
+sudo service ssh restart
+
+-------- snap3
+
+ssh -i ~/.ssh/grader2 -p 2200 grader@35.175.206.63
+
+sudo nano /etc/ssh/sshd_config
+Change PasswordAuthentication yes to no (tirar o password-prohibited)
+
+sudo service ssh restart
+sudo dpkg-reconfigure tzdata
+
+sudo apt-get install apache2
+
+sudo apt-get install libapache2-mod-wsgi python-dev
+sudo a2enmod wsgi
+sudo service apache2 restart
+Check if Python is installed: python
+sudo apt-get install postgresql
+
+
+----- snap4
+
+sudo nano /etc/postgresql/10/main/pg_hba.conf
+Check to make sure it looks like this:
+# Database administrative login by Unix domain socket
+local   all             postgres                                peer
+# TYPE  DATABASE        USER            ADDRESS                 METHOD
+# "local" is for Unix domain socket connections only
+local   all             all                                     peer
+# IPv4 local connections:
+host    all             all             127.0.0.1/32            md5
+# IPv6 local connections:
+host    all             all             ::1/128                 md5
+
+
+sudo su - postgres
+Connect to PostgreSQL: psql
+CREATE ROLE catalog WITH PASSWORD 'clipper02';
+Allow user to create database tables: # ALTER USER catalog CREATEDB;
+Create database: # CREATE DATABASE catalog WITH OWNER catalog;
+Connect to database catalog: # \c catalog
+Revoke all the rights: # REVOKE ALL ON SCHEMA public FROM public;
+Grant access to catalog: # GRANT ALL ON SCHEMA public TO catalog;
+ALTER ROLE demo_role WITH NOLOGIN;
+Exit psql: \q 
+Exit user postgres: exit
+
+Create new Linux user called catalog and new database
+sudo adduser catalog
+Give catalog user sudo access:
+sudo visudo
+Add catalog ALL=(ALL:ALL) ALL under line root ALL=(ALL:ALL) ALL
+Save and exit the file
+Log in as catalog: sudo su - catalog
+Exit user catalog: exit
+
+---- snap4
+
+Install git and clone catalog application from github
+sudo apt-get install git
+sudo mkdir /var/www/catalog
+cd /var/www/catalog
+sudo git clone https://github.com/denisprado/crud.git catalog
+Change the ownership: sudo chown -R ubuntu:ubuntu catalog/
+CD to /var/www/catalog/catalog/server
+sudo mv webserver.py __init__.py
+Change line app.run(host='0.0.0.0', port=8000) to app.run() in init.py file
+
+Create a new project on Google API Console and download client_scretes.json file
+Copy and paste contents of downloaded client_scretes.json to the file with same name under directory /var/www/catalog/catalog/client_secrets.json
+Setup for deploying a Flask App on Ubuntu VPS
+Install pip: sudo apt-get install python-pip
+Install packages:
+   sudo pip install httplib2
+   sudo pip install requests
+   sudo pip install --upgrade oauth2client
+   sudo pip install sqlalchemy
+   sudo pip install flask
+   sudo apt-get install libpq-dev
+   sudo pip install psycopg2-binary
+
+------ snap5
+
+Setup and enble a virtual host
+Create file: sudo nano /etc/apache2/sites-available/catalog.conf
+Add the following to the file:
+   <VirtualHost *:80>
+		ServerName 35.175.206.63
+		ServerAdmin admin@35.175.206.63
+		WSGIScriptAlias / /var/www/catalog/catalog.wsgi
+		<Directory /var/www/catalog/catalog/>
+			Order allow,deny
+			Allow from all
+			Options -Indexes
+		</Directory>
+		Alias /static /var/www/catalog/catalog/static
+		<Directory /var/www/catalog/catalog/static/>
+			Order allow,deny
+			Allow from all
+			Options -Indexes
+		</Directory>
+		ErrorLog ${APACHE_LOG_DIR}/error.log
+		LogLevel warn
+		CustomLog ${APACHE_LOG_DIR}/access.log combined
+   </VirtualHost>
+
+sudo a2ensite catalog (to enable the virtual host)
+sudo service apache2 reload
+
+
+sudo nano /var/www/catalog/server/catalog.wsgi
+
+Add content below to this file and save:
+#!/usr/bin/python
+import sys
+import logging
+logging.basicConfig(stream=sys.stderr)
+sys.path.insert(0,"/var/www/catalog/catalog/server/")
+
+from __init__ import app as application
+application.secret_key = 'my_incredible_super_secret_key'
+
+sudo service apache2 reload
+
+Edit the database path
+Replace lines in __init__.py, database_setup.py, and lotsofitems.py with engine = create_engine('postgresql://catalog:clipper02@localhost/catalog')
+
+Disable defualt Apache page?
+sudo a2dissite 000-defualt.conf
+
+pip install psycopg2
+sudo service apache2 reload
+
+sudo python database_setup.py
+sudo service apache2 reload
+
+http://35.175.206.63/
+If internal errors occur: check the Apache error file
+
+mudar client_secrets para
+/var/www/catalog/catalog/server/client_secrets.json
+
+mudar uploads
